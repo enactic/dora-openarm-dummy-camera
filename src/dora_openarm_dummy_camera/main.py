@@ -21,9 +21,40 @@ import os
 import numpy as np
 import pyarrow as pa
 
+_BALL_RADIUS = 30
+_BALL_SPEED = 5
+
 
 def _generate_random_image(h, w):
     return np.random.randint(0, 256, size=(h, w, 3), dtype=np.uint8)
+
+
+def _generate_ball_image(h, w, ball_state):
+    """Generate a frame with a white ball bouncing on a black background.
+
+    ball_state is a dict with keys ``x``, ``y``, ``dx``, ``dy`` that is
+    updated in-place on every call so that the ball moves between frames.
+    """
+    image = np.zeros((h, w, 3), dtype=np.uint8)
+    cv2.circle(image, (ball_state["x"], ball_state["y"]), _BALL_RADIUS, (255, 255, 255), -1)
+
+    # Advance position and bounce off walls.
+    ball_state["x"] += ball_state["dx"]
+    ball_state["y"] += ball_state["dy"]
+    if ball_state["x"] - _BALL_RADIUS < 0:
+        ball_state["x"] = _BALL_RADIUS
+        ball_state["dx"] = abs(ball_state["dx"])
+    elif ball_state["x"] + _BALL_RADIUS >= w:
+        ball_state["x"] = w - _BALL_RADIUS - 1
+        ball_state["dx"] = -abs(ball_state["dx"])
+    if ball_state["y"] - _BALL_RADIUS < 0:
+        ball_state["y"] = _BALL_RADIUS
+        ball_state["dy"] = abs(ball_state["dy"])
+    elif ball_state["y"] + _BALL_RADIUS >= h:
+        ball_state["y"] = h - _BALL_RADIUS - 1
+        ball_state["dy"] = -abs(ball_state["dy"])
+
+    return image
 
 
 def main():
@@ -53,7 +84,25 @@ def main():
         help="The JPEG quality. (0-100) Default is 95.",
         type=int,
     )
+    parser.add_argument(
+        "--pattern",
+        default=os.getenv("PATTERN", "random"),
+        help="The image pattern to output. Choices: random, ball. Default is random.",
+        type=str,
+        choices=["random", "ball"],
+    )
     args = parser.parse_args()
+
+    ball_state = (
+        {
+            "x": args.image_width // 2,
+            "y": args.image_height // 2,
+            "dx": _BALL_SPEED,
+            "dy": _BALL_SPEED,
+        }
+        if args.pattern == "ball"
+        else None
+    )
 
     node = dora.Node()
     for event in node:
@@ -66,7 +115,10 @@ def main():
         metadata["width"] = args.image_width
         metadata["height"] = args.image_height
 
-        image = _generate_random_image(args.image_height, args.image_width)
+        if args.pattern == "ball":
+            image = _generate_ball_image(args.image_height, args.image_width, ball_state)
+        else:
+            image = _generate_random_image(args.image_height, args.image_width)
 
         if args.encoding == "rgb8":
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
