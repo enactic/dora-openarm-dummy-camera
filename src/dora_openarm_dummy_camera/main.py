@@ -93,16 +93,12 @@ def main():
     )
     args = parser.parse_args()
 
-    ball_state = (
-        {
-            "x": args.image_width // 2,
-            "y": args.image_height // 2,
-            "dx": _BALL_SPEED,
-            "dy": _BALL_SPEED,
-        }
-        if args.pattern == "ball"
-        else None
-    )
+    ball_state = {
+        "x": args.image_width // 2,
+        "y": args.image_height // 2,
+        "dx": _BALL_SPEED,
+        "dy": _BALL_SPEED,
+    }
 
     node = dora.Node()
     for event in node:
