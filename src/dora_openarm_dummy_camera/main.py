@@ -36,7 +36,9 @@ def _generate_ball_image(h, w, ball_state):
     updated in-place on every call so that the ball moves between frames.
     """
     image = np.zeros((h, w, 3), dtype=np.uint8)
-    cv2.circle(image, (ball_state["x"], ball_state["y"]), _BALL_RADIUS, (255, 255, 255), -1)
+    cv2.circle(
+        image, (ball_state["x"], ball_state["y"]), _BALL_RADIUS, (255, 255, 255), -1
+    )
 
     # Advance position and bounce off walls.
     ball_state["x"] += ball_state["dx"]
@@ -112,7 +114,9 @@ def main():
         metadata["height"] = args.image_height
 
         if args.pattern == "ball":
-            image = _generate_ball_image(args.image_height, args.image_width, ball_state)
+            image = _generate_ball_image(
+                args.image_height, args.image_width, ball_state
+            )
         else:
             image = _generate_random_image(args.image_height, args.image_width)
 
