@@ -13,4 +13,9 @@
 # limitations under the License.
 
 *.egg-info
+/.venv/
 /build/
+/dist/
+/out/
+/uv.lock
+__pycache__/
